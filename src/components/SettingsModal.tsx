@@ -52,7 +52,7 @@ export function SettingsModal({
                 </span>
               ) : apiConfigured === false ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-400">
-                  <XCircle className="h-4 w-4" /> GEMINI_API_KEY missing
+                  <XCircle className="h-4 w-4" /> Not configured
                 </span>
               ) : (
                 <span className="text-xs text-slate-400">Checking...</span>
@@ -60,9 +60,10 @@ export function SettingsModal({
             </div>
             {apiConfigured === false && (
               <p className="mt-2 text-xs text-slate-400">
-                Add <code className="text-cyan-300">GEMINI_API_KEY=...</code> to{" "}
-                <code className="text-cyan-300">.env.local</code> on the server
-                and restart the app. Keys are never exposed to the browser.
+                On Netlify, Gemini access is provided automatically by AI
+                Gateway once the site has a production deploy. To use your own
+                key instead, set <code className="text-cyan-300">GEMINI_API_KEY</code>{" "}
+                on the server. Keys are never exposed to the browser.
               </p>
             )}
           </div>

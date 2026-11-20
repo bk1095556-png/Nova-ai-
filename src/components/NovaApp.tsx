@@ -370,7 +370,117 @@ export function NovaApp() {
                   Agent
                 </span>
               )}
-       
+            </button>
+          </div>
 
-<!-- ZIP builder added: extracts embedded source files and creates a project archive. -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
+          {activeChat && activeChat.messages.length > 0 && (
+            <button
+              type="button"
+              disabled={isStreaming}
+              onClick={() =>
+                setConfirmState({
+                  title: "Clear Conversation?",
+                  description:
+                    "This removes all messages from the current conversation.",
+                  onConfirm: () => {
+                    updateChatMessages(activeChat.id, () => []);
+                    setConfirmState(null);
+                  },
+                })
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-slate-400 transition hover:bg-slate-800 hover:text-slate-200 disabled:opacity-40"
+            >
+              <Eraser className="h-4 w-4" />
+              <span className="hidden sm:inline">Clear</span>
+            </button>
+          )}
+        </header>
+
+        <main className="relative z-0 flex-1 overflow-y-auto">
+          {!activeChat || activeChat.messages.length === 0 ? (
+            <WelcomeScreen
+              onSelectPrompt={(prompt) => {
+                if (!isStreaming) void handleSend(prompt, []);
+              }}
+            />
+          ) : (
+            <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
+              {activeChat.messages.map((message, index) => {
+                const isLast = index === activeChat.messages.length - 1;
+                return (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    isStreaming={isStreaming && isLast && message.role === "assistant"}
+                    isLastAssistant={isLast && message.role === "assistant"}
+                    onRegenerate={handleRegenerate}
+                    onApproveConfirmation={(confirmation) =>
+                      void handleApproveConfirmation(message.id, confirmation)
+                    }
+                    onDenyConfirmation={(messageId) =>
+                      updateChatMessages(activeChat.id, (msgs) =>
+                        msgs.map((m) =>
+                          m.id === messageId
+                            ? { ...m, pendingConfirmation: undefined }
+                            : m
+                        )
+                      )
+                    }
+                  />
+                );
+              })}
+              <div ref={bottomRef} />
+            </div>
+          )}
+        </main>
+
+        <div className="relative z-10 border-t border-slate-800/80 bg-[#070910]/90 px-4 py-3 backdrop-blur-md">
+          <div className="mx-auto max-w-3xl">
+            <ChatInput
+              isStreaming={isStreaming}
+              webSearchEnabled={settings.webSearchEnabled}
+              onToggleWebSearch={() =>
+                setSettings((prev) => ({
+                  ...prev,
+                  webSearchEnabled: !prev.webSearchEnabled,
+                }))
+              }
+              onSend={(text, attachments) => void handleSend(text, attachments)}
+              onStop={() => abortRef.current?.abort()}
+            />
+          </div>
+        </div>
+      </div>
+
+      <SettingsModal
+        open={settingsOpen}
+        settings={settings}
+        apiConfigured={apiConfigured}
+        onUpdate={(next) => setSettings((prev) => ({ ...prev, ...next }))}
+        onRequestClearAll={() =>
+          setConfirmState({
+            title: "Delete All Conversations?",
+            description:
+              "This permanently deletes every saved chat on this device.",
+            onConfirm: () => {
+              setChats([]);
+              setActiveChatId(null);
+              setConfirmState(null);
+            },
+          })
+        }
+        onClose={() => setSettingsOpen(false)}
+      />
+
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
+
+      <ConfirmDialog
+        open={confirmState !== null}
+        title={confirmState?.title ?? ""}
+        description={confirmState?.description ?? ""}
+        onConfirm={() => confirmState?.onConfirm()}
+        onCancel={() => setConfirmState(null)}
+      />
+    </div>
+  );
+}
