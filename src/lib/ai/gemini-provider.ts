@@ -142,8 +142,11 @@ export class GeminiProvider implements AIProvider {
   readonly id = "gemini";
   private client: GoogleGenAI;
 
-  constructor(apiKey: string) {
-    this.client = new GoogleGenAI({ apiKey });
+  constructor() {
+    // Zero-config: on Netlify, AI Gateway injects GEMINI_API_KEY and
+    // GOOGLE_GEMINI_BASE_URL at runtime. A user-provided GEMINI_API_KEY
+    // takes precedence automatically if one is set.
+    this.client = new GoogleGenAI({});
   }
 
   async *streamGenerate(
